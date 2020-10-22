@@ -14,8 +14,8 @@ exports.create = function(req, res){
     let post = new Post(req.body, req.session.user._id)
     post.create().then(function(newId){
         sendgrid.send({
-            to: 't.bulka90@gmail.com ',
-            form: 'test@test.com',
+            to: 't.bulka90@gmail.com',
+            from: 'test@test.com',
             subject: 'Congrats on a New Post !',
             text: 'You did a great job creating a post !',
             html: 'You did a <strong>great</strong> job creating a post ! '
