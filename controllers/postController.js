@@ -1,6 +1,9 @@
 const { json } = require('express')
 
 const Post = (require('../models/Post'))
+const sendgrid = require('@sendgrid/mail')
+sendgrid.setApiKey(process.env.SENDGRIDAPIKEY)
+
 
 exports.viewCreateScreen = function(req, res){
 
@@ -10,6 +13,13 @@ exports.viewCreateScreen = function(req, res){
 exports.create = function(req, res){
     let post = new Post(req.body, req.session.user._id)
     post.create().then(function(newId){
+        sendgrid.send({
+            to: 'blah@mail.com ',
+            form: 'test@test.com',
+            subject: 'Congrats on a New Post !',
+            text: 'You did a great job creating a post !',
+            html: 'You did a <strong>great</strong> job creating a post ! '
+        })
         req.flash("success", "New post succesfully created")
         req.session.save(() => res.redirect(`/post/${newId}`))
     }).catch(function(errors){
