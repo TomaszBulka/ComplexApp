@@ -118,18 +118,17 @@ Post.reusablePostQuery= function(uniqueOperations, visitorId){
             post.authorId = undefined // tutaj określamy authorId jako undefined poniewaz nie chcemy, żeby przy wyszukiwaniu posta było je widać w przeglądarce - do tego momentu jest w funkcji
 
             post.author = {
-
                 username: post.author.username,
                 avatar: new User(post.author, true).avatar
             }
-
             return post
         })
 
         resolve(posts)
     })
-
 }
+
+
 Post.findSingleById = function(id, visitorId){
 
     return new Promise(async function(resolve, reject){
@@ -178,13 +177,33 @@ Post.delete = function(postIdtoDelete, currentUserId){
     })
 }
 
-Post.search = function(searchTerm) {
+// I tutaj w search nie użyłem reusablePostquery gdyż wyskakiwał błąd ze znakiem $ 
+
+Post.search = function(searchTerm, visitorId) {
    return new Promise(async (resolve, reject) => {
        if (typeof(searchTerm) == "string") {
-            let posts = await Post.reusablePostQuery([
+            let posts = await postsCollection.aggregate([
                 {$match : {$text: {$search: searchTerm}}},
-                {$sort: {$score: {$meta: "textScore"}}}
-            ])
+                {$lookup: {from: "users", localField: "author", foreignField: "_id", as: "authorDocument"}},
+                {$project: {
+                    title: 1,
+                    body: 1,
+                    createdDate: 1,
+                    authorId: "$author",
+                    author: {$arrayElemAt: ["$authorDocument", 0]}
+                }},
+                {$sort: {score: {$meta: "textScore"}}}
+            ]).toArray()
+
+            posts = posts.map(function(post){
+                post.isVisitorOwner = post.authorId.equals(visitorId)
+                post.authorId = undefined
+                    post.author = {
+                    username: post.author.username,
+                    avatar: new User(post.author, true).avatar
+                }
+                return post
+            })
             resolve(posts)
         } else{
             reject()

@@ -42,7 +42,7 @@ exports.viewSingle = async function(req, res){
         let post = await Post.findSingleById(req.params.id, req.visitorId)
         res.render('single-post-screen', {post: post, title: post.title})
     }catch{
-        res.render
+        res.render('404')
     }
 
 }
@@ -110,7 +110,7 @@ exports.apiDelete = function(req, res){
 }
 
 exports.search = function(req, res){
-    Post.search(req.body.searchTerm).then( posts =>{
+    Post.search(req.body.searchTerm, req.visitorId).then( posts =>{
         res.json(posts)
     }).catch(() => {
         res.json([])
